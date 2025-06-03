@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -54,7 +53,6 @@ data class SelectableTagCategory(
     val titleDisplay: String
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagSelectionView(
     initialTagStates: Map<String, TagState>,
@@ -138,7 +136,6 @@ fun TagSelectionView(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagCategorySection(
     category: SelectableTagCategory,

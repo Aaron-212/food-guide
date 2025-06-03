@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
@@ -32,10 +30,7 @@ import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -264,6 +259,16 @@ fun RecipeMatcherCard(
             }
         }
 
+        val description = when (selectedSearchMode) {
+            SearchModes.FUZZY -> "展示所有含当前选中任意食材的菜谱"
+            SearchModes.ACCURATE -> "展示所有含当前选中所有食材的菜谱"
+            SearchModes.SURVIVAL -> "展示当前选中食材即可制作的所有菜谱"
+        }
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+        )
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -304,7 +309,6 @@ fun RecipeMatcherCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RecipeFlow(recipes: List<Recipe>, navController: NavController) {
     val context = LocalContext.current
