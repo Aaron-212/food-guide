@@ -19,16 +19,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,56 +58,19 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ContentView() {
     var tagStates by remember { mutableStateOf(mapOf<String, TagState>()) }
     val navController = rememberNavController()
-
-    Box(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
-    ) {
-        NavHost(
-            navController,
-            startDestination = Screen.Main.route,
-        ) {
-            composable(route = Screen.Main.route) {
-                HomeView(
-                    tagStates = tagStates,
-                    onTagStatesChanged = { newTagStates -> tagStates = newTagStates },
-                    navController = navController
-                )
-            }
-
-            composable(
-                route = Screen.MarkdownDetail.route + "?id={id}",
-                arguments = listOf(
-                    navArgument("id") {
-                        type = NavType.IntType
-                        nullable = false
-                    }
-                )) { backStackEntry ->
-                val id = backStackEntry.arguments?.getInt("id")
-                requireNotNull(id) { "Recipe ID not found in arguments" }
-                MarkdownView(recipeId = id, navController = navController)
-            }
-        }
-    }
-}
-
-@Composable
-fun HomeView(
-    tagStates: Map<String, TagState>,
-    onTagStatesChanged: (Map<String, TagState>) -> Unit,
-    navController: NavController
-) {
     val context = LocalContext.current
-    var showingImagePicker by remember { mutableStateOf(false) }
-    var inputImage by remember { mutableStateOf<Any?>(null) } // Placeholder for image
+
     var recipes by remember { mutableStateOf(listOf<Recipe>()) }
     var selectedSearchMode by remember { mutableStateOf(SearchModes.FUZZY) }
 
-    // Handle tag changes
+    // var searchText by remember { mutableStateOf("") }
+
+    // Handle tag changes and fetch recipes
     LaunchedEffect(tagStates, selectedSearchMode) {
         val wantedTags = tagStates.filter { it.value == TagState.WANTED }.keys
         val unwantedTags = tagStates.filter { it.value == TagState.UNWANTED }.keys
@@ -130,6 +100,86 @@ fun HomeView(
                 }
         }
     }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize() // Ensure Box fills the screen to position toolbar correctly
+            .windowInsetsPadding(WindowInsets.statusBars)
+    ) {
+        NavHost(
+            navController,
+            startDestination = Screen.Main.route,
+        ) {
+            composable(route = Screen.Main.route) {
+                HomeView(
+                    tagStates = tagStates,
+                    onTagStatesChanged = { newTagStates -> tagStates = newTagStates },
+                    navController = navController,
+                    recipes = recipes,
+                    selectedSearchMode = selectedSearchMode,
+                    onSearchModeChange = { newMode -> selectedSearchMode = newMode }
+                )
+            }
+
+            composable(
+                route = Screen.MarkdownDetail.route + "?id={id}",
+                arguments = listOf(
+                    navArgument("id") {
+                        type = NavType.IntType
+                        nullable = false
+                    }
+                )) { backStackEntry ->
+                val id = backStackEntry.arguments?.getInt("id")
+                requireNotNull(id) { "Recipe ID not found in arguments" }
+                MarkdownView(recipeId = id, navController = navController)
+            }
+        }
+
+        HorizontalFloatingToolbar(
+            expanded = true,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 24.dp),
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { tagStates = mapOf() },
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Clear Selected Tags")
+                }
+            }
+        ) {
+            IconButton(
+                onClick = {
+                    if (recipes.isNotEmpty()) {
+                        val randomRecipe = recipes.random()
+                        if (randomRecipe.isVideo) {
+                            val intent = Intent(Intent.ACTION_VIEW, randomRecipe.content.toUri())
+                            context.startActivity(intent)
+                        } else {
+                            navController.navigate(Screen.MarkdownDetail.route + "?id=${randomRecipe.id}")
+                        }
+                    }
+                },
+                enabled = recipes.isNotEmpty()
+            ) {
+                Icon(Icons.Filled.Casino, contentDescription = "Shuffle Random Recipe")
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeView(
+    tagStates: Map<String, TagState>,
+    onTagStatesChanged: (Map<String, TagState>) -> Unit,
+    navController: NavController,
+    recipes: List<Recipe>,
+    selectedSearchMode: SearchModes,
+    onSearchModeChange: (SearchModes) -> Unit
+) {
+    // val context = LocalContext.current
+    // var showingImagePicker by remember { mutableStateOf(false) }
+    // var inputImage by remember { mutableStateOf<Any?>(null) } // Placeholder for image
 
     Column(
         modifier = Modifier
@@ -167,7 +217,7 @@ fun HomeView(
             tagStates = tagStates,
             recipes = recipes,
             selectedSearchMode = selectedSearchMode,
-            onSearchModeChange = { newMode -> selectedSearchMode = newMode },
+            onSearchModeChange = onSearchModeChange,
             navController = navController
         )
     }
@@ -186,9 +236,8 @@ fun RecipeMatcherCard(
     onSearchModeChange: (SearchModes) -> Unit,
     navController: NavController
 ) {
-    val context = LocalContext.current
     Column(
-        modifier = Modifier.padding(bottom = 72.dp),
+        modifier = Modifier.padding(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Search Mode Selector
@@ -228,32 +277,6 @@ fun RecipeMatcherCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.weight(1f))
-            // Icon for menu/filter could go here
-            IconButton(
-                onClick = {
-                    if (recipes.isNotEmpty()) {
-                        val randomRecipe = recipes.random()
-                        if (randomRecipe.isVideo) {
-                            val intent = Intent(Intent.ACTION_VIEW, randomRecipe.content.toUri())
-                            context.startActivity(intent)
-                        } else {
-                            navController.navigate(route = Screen.MarkdownDetail.route + "?id=${randomRecipe.id}")
-                        }
-                    }
-                },
-                enabled = recipes.isNotEmpty()
-            ) {
-                Icon(
-                    Icons.Default.Casino, // Or Shuffle, or another appropriate icon
-                    contentDescription = "Random Recipe",
-                    tint = if (recipes.isNotEmpty()) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.inversePrimary
-                    }
-                )
-            }
         }
 
         when {

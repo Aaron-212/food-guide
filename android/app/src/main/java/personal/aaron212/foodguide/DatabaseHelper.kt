@@ -125,7 +125,7 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
 
     fun queryRecipesByTagSurvival(tags: Array<String>): List<Recipe> {
         // Survival: if a recipe contains one of the tags provided, no extra tags,
-        // and it is IMPLIED that recipes not contain any of the unwanted tags.
+        // and it is IMPLIED that recipes do not contain any of the unwanted tags.
         // so unwanted tags is basically useless
         val result = mutableListOf<Recipe>()
         if (tags.isEmpty()) return result // Survival mode requires wanted tags.
