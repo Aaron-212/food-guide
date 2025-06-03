@@ -1,6 +1,7 @@
 package personal.aaron212.foodguide
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
@@ -165,7 +165,15 @@ fun ContentView() {
                 .padding(bottom = 24.dp),
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { tagStates = mapOf() },
+                    onClick = {
+                        tagStates = mapOf()
+                        Toast.makeText(
+                            context,
+                            "清空了所有标签",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    },
                 ) {
                     Icon(Icons.Filled.Delete, contentDescription = "Clear Selected Tags")
                 }
@@ -176,6 +184,12 @@ fun ContentView() {
                 onClick = {
                     if (recipes.isNotEmpty()) {
                         val randomRecipe = recipes.random()
+                        Toast.makeText(
+                            context,
+                            "随机菜谱：${randomRecipe.name}",
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
                         if (randomRecipe.isVideo) {
                             val intent = Intent(Intent.ACTION_VIEW, randomRecipe.content.toUri())
                             context.startActivity(intent)
