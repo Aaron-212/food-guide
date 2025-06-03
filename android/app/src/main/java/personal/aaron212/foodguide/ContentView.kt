@@ -183,6 +183,7 @@ fun RecipeMatcherCard(
 ) {
     val context = LocalContext.current
     Column(
+        modifier = Modifier.padding(bottom = 72.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Search Mode Selector
