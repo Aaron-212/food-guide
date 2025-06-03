@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import personal.aaron212.foodguide.ui.LocalCustomColorsPalette
 import java.util.UUID
 
 // Data class for tag categories
@@ -53,6 +54,7 @@ fun TagSelectionView(
     modifier: Modifier = Modifier
 ) {
     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
+    val customColors = LocalCustomColorsPalette.current
 
     val tagCategories = remember {
         listOf(
@@ -62,7 +64,7 @@ fun TagSelectionView(
                     "土豆", "胡萝卜", "花菜", "白萝卜", "西葫芦", "番茄", "芹菜",
                     "黄瓜", "洋葱", "蘑菇", "茄子", "豆腐", "包菜", "白菜"
                 ),
-                tintColor = Color(0xFF4CAF50), // Green
+                tintColor = customColors.vegGreen,
                 titleDisplay = "🥬 菜菜们"
             ),
             SelectableTagCategory(
@@ -71,13 +73,13 @@ fun TagSelectionView(
                     "腊肠", "猪肉", "鸡蛋", "牛肉", "鸭肉", "鸡腿",
                     "鱼", "午餐肉", "鸡肉", "虾"
                 ),
-                tintColor = Color(0xFFE91E63), // Pink
+                tintColor = customColors.meatRed,
                 titleDisplay = "🥩 肉肉们"
             ),
             SelectableTagCategory(
                 name = "主食",
                 tags = listOf("面食", "面包", "米", "方便面"),
-                tintColor = Color(0xFFFFC107), // Yellow/Amber
+                tintColor = customColors.mainYellow,
                 titleDisplay = "🍚 主食也要一起下锅吗？"
             ),
             SelectableTagCategory(
@@ -86,7 +88,7 @@ fun TagSelectionView(
                     "烤箱", "空气炸锅", "微波炉", "盐", "白砂糖",
                     "醋", "葱", "姜", "蒜"
                 ),
-                tintColor = Color(0xFF9E9E9E), // Gray
+                tintColor = customColors.toolCyan,
                 titleDisplay = "🔍 其他的标签"
             )
         )
@@ -204,8 +206,6 @@ private fun TagChip(
         label = { Text(tag) },
         selected = isSelected,
         colors = FilterChipDefaults.filterChipColors(
-            containerColor = categoryColor.copy(alpha = 0.2f),
-            labelColor = categoryColor.copy(alpha = 0.9f),
             selectedContainerColor = categoryColor,
             selectedLabelColor = Color.White
         ),

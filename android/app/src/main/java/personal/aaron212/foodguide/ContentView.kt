@@ -245,9 +245,7 @@ fun RecipeMatcherCard(
                     tint = if (recipes.isNotEmpty()) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0f
-                        ) // Hide icon by making it transparent
+                        MaterialTheme.colorScheme.inversePrimary
                     }
                 )
             }
@@ -300,13 +298,8 @@ fun RecipeFlow(recipes: List<Recipe>, navController: NavController) {
                         Icon(
                             Icons.Default.PlayArrow,
                             contentDescription = "Video",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        labelColor = MaterialTheme.colorScheme.onTertiaryContainer
-                    ),
                 )
             } else {
                 AssistChip(
@@ -318,13 +311,8 @@ fun RecipeFlow(recipes: List<Recipe>, navController: NavController) {
                         Icon(
                             Icons.Default.Description,
                             contentDescription = "Recipe",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
                 )
             }
         }
