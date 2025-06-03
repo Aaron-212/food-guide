@@ -17,20 +17,24 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
@@ -62,6 +65,7 @@ fun ContentView() {
 
     var recipes by remember { mutableStateOf(listOf<Recipe>()) }
     var selectedSearchMode by remember { mutableStateOf(SearchModes.FUZZY) }
+    var dropdownExpanded by remember { mutableStateOf(false) } // State for DropdownMenu
 
     // var searchText by remember { mutableStateOf("") }
 
@@ -110,9 +114,7 @@ fun ContentView() {
                     tagStates = tagStates,
                     onTagStatesChanged = { newTagStates -> tagStates = newTagStates },
                     navController = navController,
-                    recipes = recipes,
-                    selectedSearchMode = selectedSearchMode,
-                    onSearchModeChange = { newMode -> selectedSearchMode = newMode }
+                    recipes = recipes
                 )
             }
 
@@ -159,6 +161,31 @@ fun ContentView() {
             ) {
                 Icon(Icons.Filled.Casino, contentDescription = "Shuffle Random Recipe")
             }
+
+            // Search Mode Dropdown
+            Box {
+                TextButton(onClick = { dropdownExpanded = true }) {
+                    Text(selectedSearchMode.displayName)
+                    Icon(
+                        if (dropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                        contentDescription = "Select Search Mode"
+                    )
+                }
+                DropdownMenu(
+                    expanded = dropdownExpanded,
+                    onDismissRequest = { dropdownExpanded = false }
+                ) {
+                    SearchModes.entries.forEach { mode ->
+                        DropdownMenuItem(
+                            text = { Text(mode.displayName) },
+                            onClick = {
+                                selectedSearchMode = mode
+                                dropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -168,9 +195,7 @@ fun HomeView(
     tagStates: Map<String, TagState>,
     onTagStatesChanged: (Map<String, TagState>) -> Unit,
     navController: NavController,
-    recipes: List<Recipe>,
-    selectedSearchMode: SearchModes,
-    onSearchModeChange: (SearchModes) -> Unit
+    recipes: List<Recipe>
 ) {
     // val context = LocalContext.current
     // var showingImagePicker by remember { mutableStateOf(false) }
@@ -211,8 +236,6 @@ fun HomeView(
         RecipeMatcherCard(
             tagStates = tagStates,
             recipes = recipes,
-            selectedSearchMode = selectedSearchMode,
-            onSearchModeChange = onSearchModeChange,
             navController = navController
         )
     }
@@ -227,15 +250,14 @@ fun HomeView(
 fun RecipeMatcherCard(
     tagStates: Map<String, TagState>,
     recipes: List<Recipe>,
-    selectedSearchMode: SearchModes,
-    onSearchModeChange: (SearchModes) -> Unit,
     navController: NavController
 ) {
     Column(
         modifier = Modifier.padding(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Search Mode Selector
+        // Search Mode Selector - REMOVED FROM HERE
+        /*
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -268,6 +290,7 @@ fun RecipeMatcherCard(
             text = description,
             style = MaterialTheme.typography.bodySmall,
         )
+        */
 
         Row(
             verticalAlignment = Alignment.CenterVertically
