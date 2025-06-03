@@ -74,8 +74,6 @@ fun ContentView() {
     var selectedSearchMode by remember { mutableStateOf(SearchModes.FUZZY) }
     var dropdownExpanded by remember { mutableStateOf(false) } // State for DropdownMenu
 
-    // var searchText by remember { mutableStateOf("") }
-
     // Handle tag changes and fetch recipes
     LaunchedEffect(tagStates, selectedSearchMode) {
         val wantedTags = tagStates.filter { it.value == TagState.WANTED }.keys
@@ -306,42 +304,6 @@ fun RecipeMatcherCard(
         modifier = Modifier.padding(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Search Mode Selector - REMOVED FROM HERE
-        /*
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SearchModes.entries.forEach { mode ->
-                FilterChip(
-                    selected = selectedSearchMode == mode,
-                    onClick = { onSearchModeChange(mode) },
-                    label = {
-                        Text(
-                            mode.displayName,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-            }
-        }
-
-        val description = when (selectedSearchMode) {
-            SearchModes.FUZZY -> "展示所有含当前选中任意食材的菜谱"
-            SearchModes.ACCURATE -> "展示所有含当前选中所有食材的菜谱"
-            SearchModes.SURVIVAL -> "展示当前选中食材即可制作的所有菜谱"
-        }
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        */
-
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
