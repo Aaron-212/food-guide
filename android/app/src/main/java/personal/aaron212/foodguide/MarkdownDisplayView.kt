@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -27,13 +26,11 @@ import com.halilibo.richtext.commonmark.Markdown
 import com.halilibo.richtext.ui.material3.RichText
 
 @Composable
-fun MarkdownView(
-    recipeId: Int,
+fun MarkdownDisplayView(
+    title: String,
+    markdownContent: String,
     navController: NavController
 ) {
-    val context = LocalContext.current
-    val dbHelper = DatabaseHelper.getInstance(context)
-    val recipe = dbHelper.get1RecipeById(recipeId)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +49,7 @@ fun MarkdownView(
                 )
             }
             Text(
-                text = recipe?.name ?: "Markdown Demo",
+                text = title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp)
@@ -64,11 +61,12 @@ fun MarkdownView(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(bottom = 96.dp)
         ) {
             RichText(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Markdown(recipe?.content ?: "Markdown Content")
+                Markdown(markdownContent)
             }
         }
     }

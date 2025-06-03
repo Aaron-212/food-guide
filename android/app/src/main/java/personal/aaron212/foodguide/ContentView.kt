@@ -1,6 +1,8 @@
 package personal.aaron212.foodguide
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Casino
@@ -125,10 +128,35 @@ fun ContentView() {
                         type = NavType.IntType
                         nullable = false
                     }
-                )) { backStackEntry ->
+                ),
+                enterTransition = {
+                    return@composable slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Start, tween(400)
+                    )
+                },
+                popExitTransition = {
+                    return@composable slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End, tween(400)
+                    )
+                }) { backStackEntry ->
                 val id = backStackEntry.arguments?.getInt("id")
                 requireNotNull(id) { "Recipe ID not found in arguments" }
-                MarkdownView(recipeId = id, navController = navController)
+                MarkdownRecipeView(recipeId = id, navController = navController)
+            }
+
+            composable(
+                route = Screen.Help.route,
+                enterTransition = {
+                    return@composable slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Start, tween(400)
+                    )
+                },
+                popExitTransition = {
+                    return@composable slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End, tween(400)
+                    )
+                }) {
+                HelpView(navController = navController)
             }
         }
 
@@ -160,6 +188,15 @@ fun ContentView() {
                 enabled = recipes.isNotEmpty()
             ) {
                 Icon(Icons.Filled.Casino, contentDescription = "Shuffle Random Recipe")
+            }
+
+            // Help Button
+            IconButton(
+                onClick = {
+                    navController.navigate(Screen.Help.route)
+                }
+            ) {
+                Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Help")
             }
 
             // Search Mode Dropdown
