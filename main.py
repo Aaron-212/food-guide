@@ -236,7 +236,7 @@ def process_json_recipes(conn, cursor):
             continue
 
         # Insert tags from JSON fields
-        all_tags = recipe_item.get("stuff", []) + recipe_item.get("tags", [])
+        all_tags = recipe_item.get("stuff", []) + recipe_item.get("tools", [])
         insert_tags(cursor, recipe_id, all_tags)
 
     conn.commit()
