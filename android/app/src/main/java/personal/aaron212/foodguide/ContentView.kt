@@ -242,7 +242,13 @@ fun RecipeMatcherCard(
                 Icon(
                     Icons.Default.Casino, // Or Shuffle, or another appropriate icon
                     contentDescription = "Random Recipe",
-                    tint = if (recipes.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0f) // Hide icon by making it transparent
+                    tint = if (recipes.isNotEmpty()) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0f
+                        ) // Hide icon by making it transparent
+                    }
                 )
             }
         }
@@ -255,6 +261,7 @@ fun RecipeMatcherCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
             recipes.isEmpty() -> {
                 Text(
                     text = "没有找到匹配的菜谱，试试别的组合吧～",
@@ -262,6 +269,7 @@ fun RecipeMatcherCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
             else -> {
                 // TagFlow equivalent - using FlowRow or custom implementation
                 RecipeFlow(recipes = recipes, navController = navController)

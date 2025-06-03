@@ -1,21 +1,40 @@
 package personal.aaron212.foodguide
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.util.*
+import java.util.UUID
 
 // Data class for tag categories
 data class SelectableTagCategory(
@@ -34,13 +53,13 @@ fun TagSelectionView(
     modifier: Modifier = Modifier
 ) {
     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
-    
+
     val tagCategories = remember {
         listOf(
             SelectableTagCategory(
                 name = "蔬菜",
                 tags = listOf(
-                    "土豆", "胡萝卜", "花菜", "白萝卜", "西葫芦", "番茄", "芹菜", 
+                    "土豆", "胡萝卜", "花菜", "白萝卜", "西葫芦", "番茄", "芹菜",
                     "黄瓜", "洋葱", "蘑菇", "茄子", "豆腐", "包菜", "白菜"
                 ),
                 tintColor = Color(0xFF4CAF50), // Green
@@ -49,7 +68,7 @@ fun TagSelectionView(
             SelectableTagCategory(
                 name = "肉类",
                 tags = listOf(
-                    "腊肠", "猪肉", "鸡蛋", "牛肉", "鸭肉", "鸡腿", 
+                    "腊肠", "猪肉", "鸡蛋", "牛肉", "鸭肉", "鸡腿",
                     "鱼", "午餐肉", "鸡肉", "虾"
                 ),
                 tintColor = Color(0xFFE91E63), // Pink
@@ -64,7 +83,7 @@ fun TagSelectionView(
             SelectableTagCategory(
                 name = "其他",
                 tags = listOf(
-                    "烤箱", "空气炸锅", "微波炉", "盐", "白砂糖", 
+                    "烤箱", "空气炸锅", "微波炉", "盐", "白砂糖",
                     "醋", "葱", "姜", "蒜"
                 ),
                 tintColor = Color(0xFF9E9E9E), // Gray
@@ -129,9 +148,9 @@ private fun TagCategorySection(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = if (isExpanded) "Collapse" else "Expand",
                     tint = category.tintColor,
                     modifier = Modifier.rotate(
@@ -143,7 +162,7 @@ private fun TagCategorySection(
                 )
             }
         }
-        
+
         // Tags flow layout with animation
         AnimatedVisibility(
             visible = isExpanded,
