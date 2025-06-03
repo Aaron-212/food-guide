@@ -6,9 +6,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import java.io.FileOutputStream
 
-private const val DB_NAME = "food_guide_recipes.db"
-private const val DB_FOLDER = "databases"   // final device folder
-
 data class Recipe(
     val id: Int,
     val name: String,
@@ -166,6 +163,7 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
     companion object {
         @Volatile
         private var instance: DatabaseHelper? = null
+        private const val DB_NAME = "food_guide_recipes.db"
 
         fun getInstance(ctx: Context): DatabaseHelper =
             instance ?: synchronized(this) {
@@ -175,16 +173,14 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
         // 1. copy from assets once; 2. open database readonly
         private fun createFromAsset(ctx: Context): DatabaseHelper {
             val dbPath = ctx.getDatabasePath(DB_NAME)
-            if (!dbPath.exists()) {
-                // first launch -> copy
-                dbPath.parentFile?.mkdirs()
-                ctx.assets.open("$DB_FOLDER/$DB_NAME").use { input ->
-                    FileOutputStream(dbPath).use { output ->
-                        input.copyTo(output)
-                    }
+            // first launch -> copy
+            dbPath.parentFile?.mkdirs()
+            ctx.assets.open(DB_NAME).use { input ->
+                FileOutputStream(dbPath).use { output ->
+                    input.copyTo(output)
                 }
-                Log.d("DatabaseHelper", "Database copied to ${dbPath.absolutePath}")
             }
+            Log.d("DatabaseHelper", "Database copied to ${dbPath.absolutePath}")
             // Could also use OPEN_READWRITE if you plan to insert/update
             val sqliteDb = SQLiteDatabase.openDatabase(
                 dbPath.absolutePath,
