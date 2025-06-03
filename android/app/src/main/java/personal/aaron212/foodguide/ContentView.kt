@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -55,7 +54,7 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ContentView() {
-    var selectedTags by remember { mutableStateOf(setOf<String>()) }
+    var tagStates by remember { mutableStateOf(mapOf<String, TagState>()) }
     val navController = rememberNavController()
 
     Box(
@@ -67,8 +66,8 @@ fun ContentView() {
         ) {
             composable(route = Screen.Main.route) {
                 HomeView(
-                    selectedTags = selectedTags,
-                    onTagsChanged = { newTags -> selectedTags = newTags },
+                    tagStates = tagStates,
+                    onTagStatesChanged = { newTagStates -> tagStates = newTagStates },
                     navController = navController
                 )
             }
@@ -91,37 +90,45 @@ fun ContentView() {
 
 @Composable
 fun HomeView(
-    selectedTags: Set<String>,
-    onTagsChanged: (Set<String>) -> Unit,
+    tagStates: Map<String, TagState>,
+    onTagStatesChanged: (Map<String, TagState>) -> Unit,
     navController: NavController
 ) {
     val context = LocalContext.current
     var showingImagePicker by remember { mutableStateOf(false) }
     var inputImage by remember { mutableStateOf<Any?>(null) } // Placeholder for image
     var recipes by remember { mutableStateOf(listOf<Recipe>()) }
-    var previousTagsWereEmpty by remember { mutableStateOf(true) }
     var selectedSearchMode by remember { mutableStateOf(SearchModes.FUZZY) }
 
     // Handle tag changes
-    LaunchedEffect(selectedTags, selectedSearchMode) {
-        val wasEmpty = previousTagsWereEmpty
-        val isNowEmpty = selectedTags.isEmpty()
+    LaunchedEffect(tagStates, selectedSearchMode) {
+        val wantedTags = tagStates.filter { it.value == TagState.WANTED }.keys
+        val unwantedTags = tagStates.filter { it.value == TagState.UNWANTED }.keys
 
         // Fetch recipes based on selected tags using DatabaseHelper
         withContext(Dispatchers.IO) {
             val dbHelper = DatabaseHelper.getInstance(context)
-            recipes = if (selectedTags.isEmpty()) {
-                listOf() // Show no recipes when no tags are selected
-            } else {
-                when (selectedSearchMode) {
-                    SearchModes.FUZZY -> dbHelper.queryRecipesByTagFuzzy(selectedTags.toTypedArray())
-                    SearchModes.ACCURATE -> dbHelper.queryRecipesByTagAccurate(selectedTags.toTypedArray())
-                    SearchModes.SURVIVAL -> dbHelper.queryRecipesByTagSurvival(selectedTags.toTypedArray())
-                }
-            }
-        }
+            recipes =
+                if (wantedTags.isEmpty() && selectedSearchMode != SearchModes.SURVIVAL) {
+                    listOf()
+                } else {
+                    when (selectedSearchMode) {
+                        SearchModes.FUZZY -> dbHelper.queryRecipesByTagFuzzy(
+                            wantedTags.toTypedArray(),
+                            unwantedTags.toTypedArray()
+                        )
 
-        previousTagsWereEmpty = isNowEmpty
+                        SearchModes.ACCURATE -> dbHelper.queryRecipesByTagAccurate(
+                            wantedTags.toTypedArray(),
+                            unwantedTags.toTypedArray()
+                        )
+
+                        SearchModes.SURVIVAL ->
+                            dbHelper.queryRecipesByTagSurvival(wantedTags.toTypedArray())
+
+                    }
+                }
+        }
     }
 
     Column(
@@ -151,15 +158,14 @@ fun HomeView(
 
         // MARK: — Ingredient Sections
         TagSelectionView(
-            selectedTags = selectedTags,
-            onTagsChanged = onTagsChanged
+            initialTagStates = tagStates,
+            onTagStatesChanged = onTagStatesChanged
         )
 
         // MARK: — Matcher Card
         RecipeMatcherCard(
-            selectedTags = selectedTags,
+            tagStates = tagStates,
             recipes = recipes,
-            onRecipesChange = { newRecipes -> recipes = newRecipes },
             selectedSearchMode = selectedSearchMode,
             onSearchModeChange = { newMode -> selectedSearchMode = newMode },
             navController = navController
@@ -174,9 +180,8 @@ fun HomeView(
 
 @Composable
 fun RecipeMatcherCard(
-    selectedTags: Set<String>,
+    tagStates: Map<String, TagState>,
     recipes: List<Recipe>,
-    onRecipesChange: (List<Recipe>) -> Unit,
     selectedSearchMode: SearchModes,
     onSearchModeChange: (SearchModes) -> Unit,
     navController: NavController
@@ -252,7 +257,7 @@ fun RecipeMatcherCard(
         }
 
         when {
-            recipes.isEmpty() && selectedTags.isEmpty() -> {
+            tagStates.filter { it.value == TagState.WANTED }.isEmpty() -> {
                 Text(
                     text = "你要先选食材或工具哦～",
                     style = MaterialTheme.typography.bodySmall,

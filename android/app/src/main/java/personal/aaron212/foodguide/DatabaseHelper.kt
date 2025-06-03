@@ -40,17 +40,27 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
         return list
     }
 
-    fun queryRecipesByTagFuzzy(tags: Array<String>): List<Recipe> {
+    fun queryRecipesByTagFuzzy(
+        tags: Array<String>,
+        unwantedTags: Array<String> = emptyArray()
+    ): List<Recipe> {
         // Fuzzy: if a recipe contains one of the tags provided, add it to the result
+        // AND it does not contain any of the unwanted tags.
         val result = mutableListOf<Recipe>()
         if (tags.isEmpty()) return result
 
         val tagsString = tags.joinToString { "'$it'" }
+        var selection = "t.tag IN ($tagsString)"
+
+        if (unwantedTags.isNotEmpty()) {
+            val unwantedTagsString = unwantedTags.joinToString { "'$it'" }
+            selection += " AND r.id NOT IN (SELECT recipe_id FROM RecipeTag WHERE tag IN ($unwantedTagsString))"
+        }
 
         val cursor: Cursor = db.query(
             "Recipe AS r JOIN RecipeTag AS t ON t.recipe_id = r.id",
             null,
-            "t.tag IN ($tagsString)",
+            selection,
             null,
             "r.id",
             null,
@@ -70,17 +80,31 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
         return result
     }
 
-    fun queryRecipesByTagAccurate(tags: Array<String>): List<Recipe> {
+    fun queryRecipesByTagAccurate(
+        tags: Array<String>,
+        unwantedTags: Array<String> = emptyArray()
+    ): List<Recipe> {
         // Accurate: if a recipe contains all of the tags provided, add it to the result
+        // AND it does not contain any of the unwanted tags.
         val result = mutableListOf<Recipe>()
         if (tags.isEmpty()) return result
 
         val tagsString = tags.joinToString { "'$it'" }
+        var selection = "t.tag IN ($tagsString)"
+
+        if (unwantedTags.isNotEmpty()) {
+            val unwantedTagsString = unwantedTags.joinToString { "'$it'" }
+            // This condition needs to be applied *before* grouping for recipes that might otherwise meet the wanted criteria.
+            // However, to ensure a recipe is excluded if it has *any* unwanted tag,
+            // it's better to filter out such recipes from the main set.
+            // We can add this to the WHERE clause.
+            selection += " AND r.id NOT IN (SELECT recipe_id FROM RecipeTag WHERE tag IN ($unwantedTagsString))"
+        }
 
         val c: Cursor = db.query(
             "Recipe AS r JOIN RecipeTag AS t ON t.recipe_id = r.id",
             null,
-            "t.tag IN ($tagsString)", null,
+            selection, null,
             "r.id",
             "COUNT(DISTINCT t.tag) = ${tags.size}",
             null
@@ -100,13 +124,13 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
     }
 
     fun queryRecipesByTagSurvival(tags: Array<String>): List<Recipe> {
-        // Survival: if a recipe contains one of the tags provided plus no extra tags, add it to the result
+        // Survival: if a recipe contains one of the tags provided, no extra tags,
+        // and it is IMPLIED that recipes not contain any of the unwanted tags.
+        // so unwanted tags is basically useless
         val result = mutableListOf<Recipe>()
-        if (tags.isEmpty()) return result
+        if (tags.isEmpty()) return result // Survival mode requires wanted tags.
 
         val tagsString = tags.joinToString { "'$it'" }
-
-        // We need to use rawQuery for this more complex query
         val query = """
             SELECT DISTINCT r.id, r.name, r.content, r.is_video
             FROM Recipe r
@@ -114,7 +138,7 @@ class DatabaseHelper private constructor(private val db: SQLiteDatabase) {
                 SELECT recipe_id FROM RecipeTag WHERE tag IN ($tagsString)
             )
             AND NOT EXISTS (
-                SELECT 1 FROM RecipeTag 
+                SELECT 1 FROM RecipeTag
                 WHERE recipe_id = r.id AND tag NOT IN ($tagsString)
             )
         """.trimIndent()

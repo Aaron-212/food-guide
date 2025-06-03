@@ -33,9 +33,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import personal.aaron212.foodguide.ui.LocalCustomColorsPalette
 import java.util.UUID
+
+// Enum for tag selection state
+enum class TagState {
+    UNSELECTED,
+    WANTED,
+    UNWANTED
+}
 
 // Data class for tag categories
 data class SelectableTagCategory(
@@ -49,8 +57,8 @@ data class SelectableTagCategory(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagSelectionView(
-    selectedTags: Set<String>,
-    onTagsChanged: (Set<String>) -> Unit,
+    initialTagStates: Map<String, TagState>,
+    onTagStatesChanged: (Map<String, TagState>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
@@ -102,7 +110,7 @@ fun TagSelectionView(
             TagCategorySection(
                 category = category,
                 isExpanded = expandedCategories.contains(category.id),
-                selectedTags = selectedTags,
+                tagStates = initialTagStates,
                 onExpandToggle = {
                     expandedCategories = if (expandedCategories.contains(category.id)) {
                         expandedCategories - category.id
@@ -111,12 +119,19 @@ fun TagSelectionView(
                     }
                 },
                 onTagToggle = { tag ->
-                    val newTags = if (selectedTags.contains(tag)) {
-                        selectedTags - tag
-                    } else {
-                        selectedTags + tag
+                    val currentTagState = initialTagStates[tag] ?: TagState.UNSELECTED
+                    val nextState = when (currentTagState) {
+                        TagState.UNSELECTED -> TagState.WANTED
+                        TagState.WANTED -> TagState.UNWANTED
+                        TagState.UNWANTED -> TagState.UNSELECTED
                     }
-                    onTagsChanged(newTags)
+                    val newTagStates = initialTagStates.toMutableMap()
+                    if (nextState == TagState.UNSELECTED) {
+                        newTagStates.remove(tag)
+                    } else {
+                        newTagStates[tag] = nextState
+                    }
+                    onTagStatesChanged(newTagStates)
                 }
             )
         }
@@ -128,7 +143,7 @@ fun TagSelectionView(
 private fun TagCategorySection(
     category: SelectableTagCategory,
     isExpanded: Boolean,
-    selectedTags: Set<String>,
+    tagStates: Map<String, TagState>,
     onExpandToggle: () -> Unit,
     onTagToggle: (String) -> Unit
 ) {
@@ -184,7 +199,7 @@ private fun TagCategorySection(
                 category.tags.forEach { tag ->
                     TagChip(
                         tag = tag,
-                        isSelected = selectedTags.contains(tag),
+                        state = tagStates[tag] ?: TagState.UNSELECTED,
                         categoryColor = category.tintColor,
                         onClick = { onTagToggle(tag) }
                     )
@@ -197,22 +212,44 @@ private fun TagCategorySection(
 @Composable
 private fun TagChip(
     tag: String,
-    isSelected: Boolean,
+    state: TagState,
     categoryColor: Color,
     onClick: () -> Unit
 ) {
+    val chipIsSelectedOverall = state != TagState.UNSELECTED
+
     FilterChip(
         onClick = onClick,
-        label = { Text(tag) },
-        selected = isSelected,
+        label = {
+            Text(
+                tag,
+                textDecoration = when (state) {
+                    TagState.UNWANTED -> TextDecoration.LineThrough
+                    else -> null
+                }
+            )
+        },
+        selected = chipIsSelectedOverall,
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = categoryColor,
-            selectedLabelColor = Color.White
+            selectedContainerColor = when (state) {
+                TagState.UNWANTED -> MaterialTheme.colorScheme.error
+                else -> categoryColor
+            },
+            selectedLabelColor = when (state) {
+                TagState.WANTED -> Color.White
+                TagState.UNWANTED -> MaterialTheme.colorScheme.onError
+                else -> MaterialTheme.colorScheme.onSurface
+            },
         ),
         border = FilterChipDefaults.filterChipBorder(
-            borderColor = categoryColor.copy(alpha = 0.5f),
-            selectedBorderColor = categoryColor,
-            selected = isSelected,
+            borderColor = categoryColor,
+            selectedBorderColor = when (state) {
+                TagState.WANTED -> categoryColor
+                TagState.UNWANTED -> MaterialTheme.colorScheme.error
+                else -> Color.Unspecified
+            },
+            selectedBorderWidth = 1.dp,
+            selected = chipIsSelectedOverall,
             enabled = true,
         ),
         modifier = Modifier.padding()
