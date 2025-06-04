@@ -180,23 +180,26 @@ fun ContentView() {
             // Shuffle Button
             IconButton(
                 onClick = {
-                    if (recipes.isNotEmpty()) {
-                        val randomRecipe = recipes.random()
-                        Toast.makeText(
-                            context,
-                            "随机菜谱：${randomRecipe.name}",
-                            Toast.LENGTH_LONG
-                        )
-                            .show()
-                        if (randomRecipe.isVideo) {
-                            val intent = Intent(Intent.ACTION_VIEW, randomRecipe.content.toUri())
-                            context.startActivity(intent)
-                        } else {
-                            navController.navigate(Screen.MarkdownDetail.route + "?id=${randomRecipe.id}")
-                        }
+                    val randomRecipe = if (recipes.isNotEmpty()) {
+                        recipes.random()
+                    } else {
+                        val dbHelper = DatabaseHelper.getInstance(context)
+                        dbHelper.getAllRecipes().random()
+                    }
+
+                    Toast.makeText(
+                        context,
+                        "随机菜谱：${randomRecipe.name}",
+                        Toast.LENGTH_LONG
+                    )
+                        .show()
+                    if (randomRecipe.isVideo) {
+                        val intent = Intent(Intent.ACTION_VIEW, randomRecipe.content.toUri())
+                        context.startActivity(intent)
+                    } else {
+                        navController.navigate(Screen.MarkdownDetail.route + "?id=${randomRecipe.id}")
                     }
                 },
-                enabled = recipes.isNotEmpty()
             ) {
                 Icon(Icons.Filled.Casino, contentDescription = "Shuffle Random Recipe")
             }
